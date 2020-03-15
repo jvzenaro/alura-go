@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
-const monitoramentos = 3
-const delay = 5
+const monitoramentos = 5
+const delay = 10
 
 func main() {
 	exibeIntroducao()
@@ -107,11 +109,32 @@ func testaSite(site string) {
 
 	if response.StatusCode >= 200 && response.StatusCode < 300 {
 		fmt.Println("Site:", site, "foi carregado com sucesso!")
+		registraLog(site, true)
 	} else {
 		fmt.Println("Site:", site, "está com problemas. Status Code:", response.StatusCode)
+		registraLog(site, false)
 	}
+}
+
+func registraLog(site string, online bool) {
+	arquivo, err := os.OpenFile("log.txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro", err)
+	}
+
+	arquivo.WriteString(time.Now().Format("02/01/2006 15:04:05") + " - " + site + " - online: " + strconv.FormatBool(online) + "\n")
+
+	arquivo.Close()
 }
 
 func exibeLogs() {
 	fmt.Println("Exibindo logs...")
+	arquivo, err := ioutil.ReadFile("log.txt")
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro", err)
+	}
+
+	fmt.Println(string(arquivo))
 }
